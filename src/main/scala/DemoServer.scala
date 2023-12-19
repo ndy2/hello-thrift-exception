@@ -13,9 +13,9 @@ object PingServiceImpl extends PingService.MethodPerEndpoint {
 
   override def futureNpe(): Future[String] = Future.exception(new NullPointerException("futureNpe"))
 
-  override def futureMteNotDeclared(): Future[String] = Future.exception(new NullPointerException("futureMteNotDeclared"))
+  override def futureMteNotDeclared(): Future[String] = Future.exception(new MyThriftException("futureMteNotDeclared"))
 
-  override def futureMteDeclared(): Future[String] = Future.exception(new NullPointerException("futureMteDeclared"))
+  override def futureMteDeclared(): Future[String] = Future.exception(new MyThriftException("futureMteDeclared"))
 }
 
 object DemoServer extends TwitterServer {
