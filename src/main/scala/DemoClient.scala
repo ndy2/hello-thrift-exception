@@ -11,7 +11,7 @@ object DemoClient extends App {
 //  Await.result(client.throwNpe())
 //  Await.result(client.throwMteNotDeclared())
 //  Await.result(client.throwMteDeclared())
-//  Await.result(client.futureNpe())
-  Await.result(client.futureMteNotDeclared())
+  Await.result(client.futureNpe())
+//  Await.result(client.futureMteNotDeclared())
 //  Await.result(client.futureMteDeclared())
 }

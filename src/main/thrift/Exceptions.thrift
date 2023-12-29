@@ -4,3 +4,7 @@ namespace java hello
 exception MyThriftException {
     1: required string message
 }
+
+exception YourThriftException {
+    1: required string message
+}

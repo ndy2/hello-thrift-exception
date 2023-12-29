@@ -18,6 +18,7 @@ service PingService {
   string futureMteNotDeclared()
 
   string futureMteDeclared() throws (
-    1: Exceptions.MyThriftException e
+    1: Exceptions.MyThriftException mte
+    2: Exceptions.YourThriftException yte
   )
 }
