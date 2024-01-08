@@ -42,10 +42,12 @@ object DemoServer extends TwitterServer {
 
   // 비동기 작업을 스케줄링하는 메서드
   def scheduleAsyncJob(depth: Int): Future[Unit] = {
-    timer.schedule(Time.now + Duration.fromMilliseconds(10000)) {
+    timer.schedule(Time.now) {
       // 비동기 작업 실행
-      println(s"Async Job is running... depth : $depth")
-      scheduleAsyncJob(depth + 1)
+      while (true) {
+        println(s"Async Job is running... depth : $depth")
+        Thread.sleep(1000L)
+      }
     }
 
     // 작업이 예약되었다는 메시지 출력
