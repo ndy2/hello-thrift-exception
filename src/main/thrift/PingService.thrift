@@ -5,6 +5,8 @@ include "Exceptions.thrift"
 
 service PingService {
 
+  string ping()
+
   string throwNpe()
 
   string throwMteNotDeclared()

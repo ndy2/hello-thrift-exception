@@ -9,11 +9,13 @@ lazy val root = (project in file("."))
   .settings(
     name := "hello-thrift-exception",
     libraryDependencies ++= Seq(
-      "org.apache.thrift" % "libthrift" % "0.10.0",
-      "com.twitter" %% "twitter-server"    % versions.finatra,
-      "com.twitter" %% "finagle-thriftmux" % versions.finatra,
-      "com.twitter" %% "scrooge-core"      % versions.finatra,
-      "com.twitter" %% "util-core"         % versions.finatra,
-      "com.twitter" %% "finagle-core"      % versions.finatra
+      "org.apache.thrift" % "libthrift"         % "0.10.0",
+      "com.twitter"      %% "twitter-server"    % versions.finatra,
+      "com.twitter"      %% "finagle-thriftmux" % versions.finatra,
+      "com.twitter"      %% "scrooge-core"      % versions.finatra,
+      "com.twitter"      %% "util-core"         % versions.finatra,
+      "com.twitter"      %% "finagle-core"      % versions.finatra,
+      "com.twitter"      %% "finagle-stats"     % "7.0.0",
+      "ch.qos.logback"    % "logback-classic"   % "1.4.14"
     )
   )

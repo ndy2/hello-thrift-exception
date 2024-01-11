@@ -8,10 +8,13 @@ object DemoClient extends App {
     .withLabel("demo-client")
     .build[PingService.MethodPerEndpoint](s"localhost:8080")
 
+  for (_ <- 1 to 10) {
+    println(Await.result(client.ping()))
+  }
 //  Await.result(client.throwNpe())
 //  Await.result(client.throwMteNotDeclared())
 //  Await.result(client.throwMteDeclared())
-  Await.result(client.futureNpe())
+//  Await.result(client.futureNpe())
 //  Await.result(client.futureMteNotDeclared())
 //  Await.result(client.futureMteDeclared())
 }
