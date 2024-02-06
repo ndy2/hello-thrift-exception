@@ -1,27 +1,45 @@
 import DemoServer.statsReceiver
-import com.twitter.finagle.{Thrift, ThriftMux}
-import com.twitter.finagle.builder.ClientBuilder
-import com.twitter.finagle.stats.{Counter, MetricBuilder, Stat, StatsReceiver}
-import com.twitter.server.TwitterServer
+import com.twitter.finagle.ThriftMux
+import com.twitter.finagle.http.Request
+import com.twitter.finagle.stats._
+import com.twitter.finatra.http.routing.HttpRouter
+import com.twitter.finatra.http.{Controller, HttpServer}
+import com.twitter.scrooge.TJSONProtocolThriftSerializer
 import com.twitter.util._
-import hello.{MyThriftException, PingService}
+import hello.{MyThriftException, PingService, RequestContext}
+
+import scala.util.Random
 
 object PingServiceImpl extends PingService.MethodPerEndpoint {
+
+  private val random = new Random()
 
   val counter: Counter = statsReceiver
     .scope("srv", "demo")
     .counter("counter")
 
-  // see ExceptionStatsHandler
-  val stat: Stat = statsReceiver
-    .scope("srv", "demo")
-    .stat("stat")
-
   override def ping(): Future[String] = {
-    stat.add(1.0.toFloat)
-    stat.metadata
     counter.incr()
     Future.value("pong")
+  }
+
+  override def counter(name: String): Future[String] = {
+    statsReceiver
+      .scope("srv", "demo")
+      .counter(name)
+      .incr()
+
+    Future.value("counter")
+  }
+
+  override def randomCounter(name: String): Future[String] = {
+    println("randomCounter")
+    val aOrB = if (random.nextBoolean()) "a"; else { "b" }
+    statsReceiver
+      .scope("srv", "demo", name, aOrB)
+      .counter()
+      .incr()
+    Future.value("randomCounter")
   }
 
   override def throwNpe(): Future[String] = {
@@ -53,34 +71,72 @@ object PingServiceImpl extends PingService.MethodPerEndpoint {
     println("futureMteDeclared")
     Future.exception(new MyThriftException("futureMteDeclared"))
   }
-}
 
-object DemoServer extends TwitterServer {
-
-  val timer = new JavaTimer(isDaemon = true)
-
-  // 비동기 작업을 스케줄링하는 메서드
-  def scheduleAsyncJob(): Future[Unit] = {
-    timer.schedule(Time.now) {
-      // 비동기 작업 실행
-      while (true) {
-        println(s"Async Job is running...")
-        Thread.sleep(60000L) // print above line once in a minute
-      }
-    }
-
-    // 작업이 예약되었다는 메시지 출력
-    Future.Unit
+  override def getToken(context: RequestContext): Future[String] = {
+    println("getToken")
+    Future.value(s"${context.client}.${context.username}")
   }
 
-  def main(): Unit = {
-    // 비동기 작업 스케줄링
-    scheduleAsyncJob()
+  override def pingWithToken(token: String): Future[String] = {
+    print(s"pingWithToken($token)")
+    Future.value("pong")
+  }
+}
 
-    println("run server")
+class PingController extends Controller {
+  private val contextSerializer = TJSONProtocolThriftSerializer(RequestContext)
+
+  get(route = "/") { req: Request => Future.value("hello") }
+  post(route = "/ping") { req: Request => PingServiceImpl.ping() }
+
+  post(route = "/counter") { req: Request =>
+    PingServiceImpl.counter(
+      name = req.getParam("name")
+    )
+  }
+
+  post(route = "/randomCounter") { req: Request =>
+    PingServiceImpl.randomCounter(
+      name = req.getParam("name")
+    )
+  }
+
+  post(route = "/throwNpe") { req: Request => PingServiceImpl.throwNpe() }
+  post(route = "/throwMteNotDeclared") { req: Request => PingServiceImpl.throwMteNotDeclared() }
+  post(route = "/throwMteDeclared") { req: Request => PingServiceImpl.throwMteDeclared() }
+  post(route = "/futureNpe") { req: Request => PingServiceImpl.futureNpe() }
+  post(route = "/futureMteNotDeclared") { req: Request => PingServiceImpl.futureMteNotDeclared() }
+  post(route = "/futureMteDeclared") { req: Request => PingServiceImpl.futureMteDeclared() }
+
+  post(route = "/getToken") { req: Request =>
+    val contentString = req.getContentString()
+    println(s"contentString = ${contentString}")
+
+    val requestContext = contextSerializer.fromString(contentString)
+    PingServiceImpl.getToken(requestContext)
+  }
+
+  post(route = "/pingWithToken") { req: Request =>
+    PingServiceImpl.pingWithToken(
+      token = req.getParam("token")
+    )
+  }
+}
+
+object DemoServer extends HttpServer {
+
+  override protected def configureHttp(router: HttpRouter): Unit = {
+    router
+      .add[PingController]
+  }
+
+  override protected def postInjectorStartup(): Unit = {
+    super.postInjectorStartup()
+
+    println("run thrift server")
     val server = ThriftMux.server
       .withLabel("demo-server")
       .serveIface("localhost:8080", PingServiceImpl)
-    Await.ready(server)
+    server.announce("flag!ping")
   }
 }

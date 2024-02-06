@@ -1,0 +1,15 @@
+GET http://localhost:8888/
+
+###
+
+POST http://localhost:8888/ping
+
+###
+
+POST http://localhost:8888/getToken
+Content-Type: text/plain
+
+{"1":{"str":"demo-http"},"2":{"str":"ndy"}}
+
+###
+
