@@ -1,3 +1,9 @@
+POST http://localhost:8888/counter
+Content-Type: test/plain
+
+{"name":"me"}
+
+###
 GET http://localhost:8888/
 
 ###
@@ -12,4 +18,5 @@ Content-Type: text/plain
 {"1":{"str":"demo-http"},"2":{"str":"ndy"}}
 
 ###
+
 
